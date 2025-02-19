@@ -1,16 +1,31 @@
-# flutter_testing_app
+### Chihnam
+### Clone the repository
+git clone https://github.com/Vishalspl-0903/Chihnam1.git
+cd Chihnam1
 
-A new Flutter project.
+### Backend (Flask) Setup
+cd backend
+pip install flask pillow gtts numpy imageio werkzeug
 
-## Getting Started
+### Set the dataset path in app.py
+Modify the line:
+DATASET_FOLDER = "path_to_your_asl_dataset"
 
-This project is a starting point for a Flutter application.
+### Run the Flask server
+python app.py
 
-A few resources to get you started if this is your first Flutter project:
+Server will start at:
+http://127.0.0.1:5000/
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Frontend (Flutter) Setup
+cd ../frontend
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Install Flutter dependencies
+flutter pub get
+
+### Update the Flask server URL in Flutter code
+Modify in generateASLVideo() function:
+Uri.parse("http://your_server_ip:5000/generate")
+
+### Run the Flutter app
+flutter run
