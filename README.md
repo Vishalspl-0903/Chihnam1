@@ -23,7 +23,7 @@ cd ../frontend
 ### Install Flutter dependencies
 flutter pub get
 
-### Update the Flask server URL in Flutter code
+### Update the Flask server URL in Flutter code(ipv4)
 Modify in generateASLVideo() function:
 Uri.parse("http://your_server_ip:5000/generate")
 
