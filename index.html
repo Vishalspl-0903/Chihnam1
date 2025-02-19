@@ -9,6 +9,7 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 20px;
+            background-color: #f4f4f4;
         }
         h1 {
             color: #4CAF50;
@@ -18,12 +19,16 @@
             width: 300px;
             font-size: 16px;
             margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         button {
             padding: 10px 20px;
             border: none;
             cursor: pointer;
             margin: 10px;
+            border-radius: 5px;
+            font-size: 16px;
         }
         .start-button {
             background-color: green;
@@ -39,37 +44,33 @@
         }
         .media-container {
             margin-top: 20px;
-        }
-        .detection-container {
-            margin-top: 30px;
-            border: 2px solid #4CAF50;
+            background: white;
             padding: 20px;
-            display: inline-block;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        video, audio {
+            margin-top: 10px;
+            width: 80%;
         }
     </style>
 </head>
 <body>
-    <h1>ASL Video Generator & Real-time Detection</h1>
+    <h1>ASL Video Generator</h1>
     
     <input type="text" id="text_input" placeholder="Enter text here" required>
     <br>
     
     <button class="start-button" onclick="startSpeechRecognition()">🎤 Start Recording</button>
-    <button class="stop-button" onclick="stopSpeechRecognition()" disabled>⏹️ Stop Recording</button>
+    <button class="stop-button" onclick="stopSpeechRecognition()" disabled>⏹ Stop Recording</button>
     <button class="generate-button" onclick="generateASLVideo()">Generate Video</button>
     
     <div class="media-container">
         <h3>Generated ASL Video</h3>
-        <video id="aslVideo" width="400" controls></video>
+        <video id="aslVideo" controls></video>
+
         <h3>Generated Speech</h3>
         <audio id="audioOutput" controls></audio>
-    </div>
-
-    <div class="detection-container">
-        <h3>Real-time ASL Detection</h3>
-        <video id="videoFeed" width="400" autoplay></video>
-        <h3>Detected Sign: <span id="detectedSign">None</span></h3>
-        <button onclick="startRealTimeDetection()">Start Detection</button>
     </div>
 
     <script>
@@ -85,17 +86,16 @@
 
                 recognition.start();
                 isRecording = true;
-
                 document.querySelector(".start-button").disabled = true;
                 document.querySelector(".stop-button").disabled = false;
 
                 recognition.onresult = function(event) {
-                    let transcript = event.results[0][0].transcript;
-                    document.getElementById("text_input").value = transcript;
+                    document.getElementById("text_input").value = event.results[0][0].transcript;
                 };
 
                 recognition.onerror = function(event) {
                     console.error("Speech recognition error:", event.error);
+                    alert("Speech recognition error. Please try again.");
                 };
 
                 recognition.onend = function() {
@@ -135,32 +135,10 @@
                     alert("Error generating ASL video.");
                 }
             })
-            .catch(error => console.error("Error:", error));
-        }
-
-        function startRealTimeDetection() {
-            const video = document.getElementById("videoFeed");
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(stream => {
-                        video.srcObject = stream;
-                        detectSign();
-                    })
-                    .catch(error => console.error("Error accessing webcam:", error));
-            } else {
-                alert("Webcam access is not supported in this browser.");
-            }
-        }
-
-        function detectSign() {
-            setInterval(() => {
-                fetch("/detect", { method: "GET" })
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("detectedSign").textContent = data.sign || "None";
-                    })
-                    .catch(error => console.error("Error detecting sign:", error));
-            }, 2000);
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while generating the ASL video.");
+            });
         }
     </script>
 </body>
