@@ -12,7 +12,7 @@ Modify the line:
 DATASET_FOLDER = "path_to_your_asl_dataset"
 
 ### Run the Flask server
-python app.py
+python video_creation.py
 
 Server will start at:
 http://127.0.0.1:5000/
