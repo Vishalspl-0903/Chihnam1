@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASL Video Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .start-button {
+            background-color: green;
+            color: white;
+        }
+        .stop-button {
+            background-color: red;
+            color: white;
+        }
+        .generate-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .media-container {
+            margin-top: 20px;
+        }
+        .detection-container {
+            margin-top: 30px;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASL Video Generator & Real-time Detection</h1>
+    
+    <input type="text" id="text_input" placeholder="Enter text here" required>
+    <br>
+    
+    <button class="start-button" onclick="startSpeechRecognition()">🎤 Start Recording</button>
+    <button class="stop-button" onclick="stopSpeechRecognition()" disabled>⏹️ Stop Recording</button>
+    <button class="generate-button" onclick="generateASLVideo()">Generate Video</button>
+    
+    <div class="media-container">
+        <h3>Generated ASL Video</h3>
+        <video id="aslVideo" width="400" controls></video>
+        <h3>Generated Speech</h3>
+        <audio id="audioOutput" controls></audio>
+    </div>
+
+    <div class="detection-container">
+        <h3>Real-time ASL Detection</h3>
+        <video id="videoFeed" width="400" autoplay></video>
+        <h3>Detected Sign: <span id="detectedSign">None</span></h3>
+        <button onclick="startRealTimeDetection()">Start Detection</button>
+    </div>
+
+    <script>
+        let recognition;
+        let isRecording = false;
+
+        function startSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = "en-US";
+
+                recognition.start();
+                isRecording = true;
+
+                document.querySelector(".start-button").disabled = true;
+                document.querySelector(".stop-button").disabled = false;
+
+                recognition.onresult = function(event) {
+                    let transcript = event.results[0][0].transcript;
+                    document.getElementById("text_input").value = transcript;
+                };
+
+                recognition.onerror = function(event) {
+                    console.error("Speech recognition error:", event.error);
+                };
+
+                recognition.onend = function() {
+                    isRecording = false;
+                    document.querySelector(".start-button").disabled = false;
+                    document.querySelector(".stop-button").disabled = true;
+                };
+            } else {
+                alert("Speech recognition is not supported in your browser. Try using Chrome.");
+            }
+        }
+
+        function stopSpeechRecognition() {
+            if (isRecording && recognition) {
+                recognition.stop();
+            }
+        }
+
+        function generateASLVideo() {
+            let textInput = document.getElementById("text_input").value.trim();
+            if (!textInput) {
+                alert("Please enter text or use voice input.");
+                return;
+            }
+
+            fetch("/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: textInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.video_url && data.audio_url) {
+                    document.getElementById("aslVideo").src = data.video_url;
+                    document.getElementById("audioOutput").src = data.audio_url;
+                } else {
+                    alert("Error generating ASL video.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function startRealTimeDetection() {
+            const video = document.getElementById("videoFeed");
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        detectSign();
+                    })
+                    .catch(error => console.error("Error accessing webcam:", error));
+            } else {
+                alert("Webcam access is not supported in this browser.");
+            }
+        }
+
+        function detectSign() {
+            setInterval(() => {
+                fetch("/detect", { method: "GET" })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("detectedSign").textContent = data.sign || "None";
+                    })
+                    .catch(error => console.error("Error detecting sign:", error));
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
